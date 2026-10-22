@@ -40,12 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
         depth: false,
         stencil: false
     });
+    if (!gl) return;
     
-    // Habilitar la extensión para texturas de punto flotante (Crucial para colores ricos tipo película)
-    if (!gl || !gl.getExtension('EXT_color_buffer_float')) {
-        console.warn("Tu navegador no soporta WebGL2 o EXT_color_buffer_float. El fondo no se renderizará.");
-        return;
-    }
+    // Intentar cargar la extensión de color de alta definición, pero si no está (iOS estricto), 
+    // continuar de todas formas.
+    const hasFloatExt = !!gl.getExtension('EXT_color_buffer_float');
 
     // --- SHADERS DIRECTOS DEL CÓDIGO ORIGINAL ---
     const VERTEX = `#version 300 es
@@ -59,6 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const FIELD = `#version 300 es
     precision highp float;
     precision highp int;
+    
+    // Extensión necesaria explícita para Mac Safari (OES_standard_derivatives)
+    #extension GL_OES_standard_derivatives : enable
+    
     uniform float uAspect;
     uniform float uTime;
     uniform vec3 uRamp[8];
@@ -125,7 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
       float raw = coord(p); float s = raw;
       if (uBands > 1.0) { s *= uBands; float cycle = floor(s); s = fract(s); if (mod(cycle, 2.0) > 0.5) s = 1.0 - s; }
       s = clamp(s, 0.0, 1.0); float scaled = s * float(uCount - 1); int index = int(min(floor(scaled), float(uCount - 2)));
-      float f = scaled - float(index); float edge = max(uSoftness * 0.5, fwidth(scaled) * 0.75); float shaped = smoothstep(0.5 - edge, 0.5 + edge, f);
+      // Fix para Safari macOS: Evitar fwidth directo o asegurarlo
+      float f = scaled - float(index); 
+      float edge = max(uSoftness * 0.5, (abs(dFdx(scaled)) + abs(dFdy(scaled))) * 0.75); 
+      float shaped = smoothstep(0.5 - edge, 0.5 + edge, f);
       vec3 from = uRamp[0]; vec3 to = uRamp[1];
       for (int i = 0; i < 7; i++) { if (i == index) { from = uRamp[i]; to = uRamp[i + 1]; } }
       vec3 lab = mix(from, to, shaped);
@@ -226,8 +232,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const width = Math.max(1, Math.round(canvas.width / 2)); const height = Math.max(1, Math.round(canvas.height / 2));
       if (width !== fieldSize.width || height !== fieldSize.height) {
         fieldSize.width = width; fieldSize.height = height;
-        // Restaurar precisión de coma flotante (RGBA16F y HALF_FLOAT) para mezcla HD
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+        
+        gl.bindTexture(gl.TEXTURE_2D, target);
+        // Fallback: Si el dispositivo no soporta Half-Float (como ciertos iPhones), 
+        // usamos la configuración de textura de 8-bits estándar. Si lo soporta (Macs), usamos HD.
+        if (hasFloatExt) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+        } else {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        }
+        
         gl.bindFramebuffer(gl.FRAMEBUFFER, buffer); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       }
     };
