@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Bucle para controlar a GlowCursor mientras el tutorial esté activo
     const ghostLoop = () => {
+        // Abortar lógica si es móvil (Ahorro extremo de batería)
+        if (window.innerWidth < 1024) {
+            if (tutorialBox) tutorialBox.remove();
+            return;
+        }
+
         if (tutorialFase < 2 && window.GlowCursorAPI) {
             let tX = 0, tY = 0;
             const containerRect = container.getBoundingClientRect();

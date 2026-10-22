@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // MATAR EL NEÓN EN MÓVILES (Libera toda la carga gráfica inútil en iOS)
+    if (window.innerWidth < 1024) {
+        const canvas = document.getElementById('neon-canvas');
+        if (canvas) canvas.remove();
+        return;
+    }
+
     const VERTEX = `#version 300 es
     in vec2 aPosition;
     uniform vec2 uTexel;
