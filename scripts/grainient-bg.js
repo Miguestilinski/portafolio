@@ -217,17 +217,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const resize = () => {
-      const isMobile = window.innerWidth < 768;
-      view.width = Math.max(1, container.clientWidth); 
-      view.height = Math.max(1, container.clientHeight); 
-      
-      // EL SECRETO SKYLRK: Forzar resolución a 0.5 en móviles. 
-      // El canvas se estira con CSS, ahorrando un 75% de cálculos en la GPU del iPhone.
-      view.ratio = isMobile ? 0.5 : Math.min(s.dpr, 2);
-      
-      canvas.width = Math.max(1, Math.round(view.width * view.ratio)); 
-      canvas.height = Math.max(1, Math.round(view.height * view.ratio));
-      const width = Math.max(1, Math.round(canvas.width / 2)); const height = Math.max(1, Math.round(canvas.height / 2));
+      view.width = Math.max(1, container.clientWidth); view.height = Math.max(1, container.clientHeight); view.ratio = Math.min(s.dpr, 2);
+      canvas.width = Math.max(1, Math.round(view.width * view.ratio)); canvas.height = Math.max(1, Math.round(view.height * view.ratio));
       if (width !== fieldSize.width || height !== fieldSize.height) {
         fieldSize.width = width; fieldSize.height = height;
         gl.bindTexture(gl.TEXTURE_2D, target); 
