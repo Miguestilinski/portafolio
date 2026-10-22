@@ -219,9 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const resize = () => {
       view.width = Math.max(1, container.clientWidth); view.height = Math.max(1, container.clientHeight); view.ratio = Math.min(s.dpr, 2);
       canvas.width = Math.max(1, Math.round(view.width * view.ratio)); canvas.height = Math.max(1, Math.round(view.height * view.ratio));
+
+      const width = Math.max(1, Math.round(canvas.width / 2)); const height = Math.max(1, Math.round(canvas.height / 2));
       if (width !== fieldSize.width || height !== fieldSize.height) {
         fieldSize.width = width; fieldSize.height = height;
-        gl.bindTexture(gl.TEXTURE_2D, target); 
         // Restaurar precisión de coma flotante (RGBA16F y HALF_FLOAT) para mezcla HD
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, buffer); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
