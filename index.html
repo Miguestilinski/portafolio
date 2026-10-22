@@ -18,15 +18,14 @@
             overflow-x: hidden; 
         }
         
-        /* Fix Safari Viewport Bug */
-        .fixed-bg-safari {
-            position: fixed;
-            top: -50vh;
-            left: -50vw;
-            width: 200vw;
-            height: 200vh;
-            z-index: -1;
-            pointer-events: none;
+        /* Fix Safari Viewport Bug (Solo Móviles) */
+        @media (max-width: 1024px) {
+            .fixed-bg-safari {
+                top: -50vh !important;
+                left: -50vw !important;
+                width: 200vw !important;
+                height: 200vh !important;
+            }
         }
 
         /* Utilidades Premium */
