@@ -217,7 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const resize = () => {
-      view.width = Math.max(1, container.clientWidth); view.height = Math.max(1, container.clientHeight); view.ratio = Math.min(s.dpr, 2);
+      const isMobile = window.innerWidth < 768;
+      view.width = Math.max(1, container.clientWidth); view.height = Math.max(1, container.clientHeight); 
+      // En móviles renderizamos a la mitad de resolución (ahorro del 75% GPU)
+      view.ratio = isMobile ? 0.5 : Math.min(s.dpr, 2);
       canvas.width = Math.max(1, Math.round(view.width * view.ratio)); canvas.height = Math.max(1, Math.round(view.height * view.ratio));
 
       const width = Math.max(1, Math.round(canvas.width / 2)); const height = Math.max(1, Math.round(canvas.height / 2));
