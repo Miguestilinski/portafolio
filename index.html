@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miguel Muñoz | Software Engineer</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
+        
+        /* Utilidades Premium */
+        .glass-nav { background: rgba(14, 35, 70, 0.3); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .glass-card { background: rgba(30, 41, 59, 0.22); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .text-gradient { background: linear-gradient(to right, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Animaciones base JS */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Efecto Glow en Mouse (manejado por JS) */
+        .glow-card { position: relative; overflow: hidden; }
+        .glow-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(99, 102, 241, 0.06), transparent 40%);
+            z-index: 0; opacity: 0; transition: opacity 0.5s; pointer-events: none;
+        }
+        .glow-card:hover::before { opacity: 1; }
+        .glow-card > * { position: relative; z-index: 1; }
+
+        /* Animaciones para el Simulador Interactivo y Degradados */
+        @keyframes flow-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .flowing-gradient {
+            background-size: 200% 200%;
+            animation: flow-gradient 8s ease infinite;
+        }
+
+        /* Canvas de Malla Líquida */
+        #gradient-canvas {
+            --gradient-color-1: #020617; /* Slate 950 Base */
+            --gradient-color-2: #c2410c; /* Orange 700 Warmth */
+            --gradient-color-3: #0ea5e9; /* Sky 500 Highlight */
+            --gradient-color-4: #0f172a; /* Slate 900 Depth */
+        }
+
+        @keyframes gentle-float {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); }
+            50% { transform: translate(-50%, -50%) translateY(-10px) scale(1.02); }
+        }
+        @keyframes energy-pulse {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6)) blur(1px); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 25px rgba(99, 102, 241, 0.9)) blur(2px); opacity: 1; }
+        }
+        .float-animation {
+            /* Mantenemos el translate inicial para el centrado absoluto */
+            animation: gentle-float 3.5s ease-in-out infinite;
+        }
+        .glow-beam {
+            animation: energy-pulse 2s ease-in-out infinite;
+        }
+        
+        /* Utilidades Flip Card 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="selection:bg-blue-400/30 selection:text-sky-100">
+    
+    <!-- Background Animado: Grainient (Vanilla JS) -->
+    <div id="grainient-container" class="fixed inset-0 w-full h-full z-[-1] pointer-events-none">
+        <canvas id="grainient-canvas" class="absolute inset-0 block h-full w-full" aria-hidden="true"></canvas>
+    </div>
+
+    <!-- Navbar Limpio (Sin Botón CTA inicial) -->
+    <nav id="navbar" class="fixed w-full z-50 top-0 transition-all duration-300 glass-nav py-5 px-6 md:px-12">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <span id="nav-logo" class="font-black text-white text-sm tracking-tighter">MM</span>
+                </div>
+                <span id="nav-brand" class="font-bold text-white hidden sm:block tracking-wide text-sm transition-colors duration-300">MIGUEL MUÑOZ</span>
+            </div>
+            <div id="nav-links" class="flex space-x-8 text-sm font-semibold tracking-wide text-white transition-colors duration-300">
+                <a href="#pizarras" class="hover:text-white transition">Productos</a>
+                <a href="#experiencia" class="hover:text-white transition">Soluciones</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-40 pb-24 px-6 md:px-12 flex flex-col items-center text-center overflow-hidden">
+        <!-- Luces de fondo -->
+        <div class="absolute top-[-10%] left-[50%] transform -translate-x-1/2 w-[600px] h-[600px] bg-blue-800/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div class="absolute top-[20%] left-[20%] w-[300px] h-[300px] bg-blue-400/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+        
+        <div class="relative z-10 max-w-4xl reveal">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FF9F1C]/30 bg-[#FF9F1C]/50 text-white text-[10px] font-bold tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(255,159,28,0.4)]">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                Ingeniería de Software B2B
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black text-white tracking-tight mb-6 leading-tight">
+                Digitalizamos tu operación con 
+                <span class="bg-gradient-to-r from-sky-200 via-[#FFC16A] to-blue-200 text-transparent bg-clip-text flowing-gradient">precisión milimétrica</span>.
+            </h1>
+            <p class="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+                Desarrollo arquitecturas de software y ecosistemas en tiempo real que eliminan la fricción manual, optimizan tus procesos y proyectan una imagen premium de tu empresa.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#pizarras" class="bg-white text-slate-800 px-8 py-4 rounded-xl font-black hover:bg-slate-200/90 transition shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    Descubrir Producto
+                </a>
+                <a href="https://wa.me/+56961659015" class="glass-card hover:bg-slate-800/40 text-white border-slate-400 px-8 py-4 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                    Conversar un proyecto
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Producto: Pizarras Quadra -->
+    <section id="pizarras" class="pt-24 pb-16 px-6 md:px-12 relative border-t border-slate-300/40 bg-slate-900/20">
+        <div class="max-w-7xl mx-auto flex flex-col gap-16">
+            <div class="text-center items-center justify-center reveal">
+                <h2 class="text-sm font-black text-[#FF9F1C] tracking-widest uppercase mb-2">Producto Destacado</h2>
+                <h3 class="text-4xl font-black text-white mb-4">Pizarras Digitales Tiempo Real</h3>
+                <p class="text-slate-200 max-w-2xl mx-auto">El sistema definitivo para Casas de Cambio. Actualización de divisas sin recargar la página, alertas para cajeros y pantallas de vitrina 100% autogestionables.</p>
+                <div class="flex justify-center items-center mt-4 gap-1.5 text-white"> 
+                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250">
+                    <path d="M56.869 43.683 C75.719 27.369 100.299 17.5 127.184 17.5 C186.555 17.5 229.715 65.629 229.715 125 C229.715 125.351 230.316 181.922 230.316 184.54 L230.316 217.061 L125.026 121.482 L125.232 93.201 L193.112 152.874 L193.112 125 C193.112 107.047 183.074 91.424 171.917 80.267 C160.76 69.11 145.137 61.738 127.184 61.738 C109.231 61.738 93.608 69.11 82.451 80.267 C82.208 80.51 81.966 80.756 81.727 81.003 C75.962 86.957 71.261 94.126 68.139 102.203 C65.439 109.189 63.922 116.855 63.922 125 C63.922 142.953 71.294 158.576 82.451 169.733 C93.608 180.89 109.808 188.052 127.76 188.052 L145.044 188.052 L125 169.517 L125.218 139.637 L227.517 232.5 L193.112 232.5 L193.109 232.497 C163.241 232.494 125.582 232.489 125.178 232.482 C66.733 231.412 19.684 183.701 19.684 125 C19.684 101.556 27.189 79.865 39.927 62.197 C44.839 55.384 50.53 49.169 56.869 43.683 Z" fill="#ffffff"/>
+                    </svg>
+                    <span class="text-xs font-mono text-slate-200 uppercase tracking-widest">Powered by Quadra</span>
+                </div>
+            </div>
+
+            <!-- Simulador de Latencia Cero -->
+            <div class="relative flex flex-col gap-4 w-full reveal items-center">
+                <p class="text-[10px] uppercase tracking-widest font-bold text-[#FF9F1C] text-center">Simulador Interactivo</p>
+                
+                <!-- Contenedor Flex para mantenerlos juntos y centrados -->
+                <div id="sim-container" class="relative flex flex-col lg:flex-row gap-8 lg:gap-24 w-full justify-center items-center lg:items-stretch mt-6">
+                    
+                    <!-- Canvas para Glow Cursor (Mix-Blend-Screen funde el negro) -->
+                    <canvas id="neon-canvas" class="absolute scale-125 z-[99] pointer-events-none mix-blend-screen opacity-90 transition-opacity duration-1000"></canvas>
+
+                    <!-- Textos de Tutorial Flotantes -->
+                    <div id="sim-tutorial" class="absolute z-50 pointer-events-none transition-all duration-700 ease-in-out opacity-100 flex items-center justify-center float-animation" style="top: 25%; left: 0%; transform: translate(-50%, -50%);">
+                        <div id="sim-tut-text" class="relative z-10 text-white text-xs font-black text-center tracking-widest uppercase drop-shadow-[0_4px_10px_rgba(0,0,0,1)] shadow-black transition-opacity duration-300">
+                            Prueba cambiando un precio
+                        </div>
+                    </div>
+
+                    <!-- Mini Editor (Glow Effect) -->
+                    <div class="glass-card rounded-2xl flex flex-col justify-between border-white/30 shadow-[0_0_30px_rgba(555,559,528,0.4)] bg-slate-900/90 w-full max-w-xs overflow-hidden transition-shadow duration-500 hover:shadow-[0_0_50px_rgba(555,559,528,0.4)]">
+                        <div class="p-5 flex-1 flex flex-col">
+                            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                                <span class="text-xs font-bold text-white uppercase tracking-wider">Editor Panel</span>
+                                <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></div>
+                            </div>
+                            
+                            <!-- Header de Columnas Editor -->
+                            <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase px-2 mb-3">
+                                <span class="w-[20%] text-center">Divisa</span>
+                                <span class="w-[40%] text-center">Compra</span>
+                                <span class="w-[40%] text-center">Venta</span>
+                            </div>
+                            
+                            <div class="space-y-3 flex-1 flex flex-col justify-between">
+                                <!-- Filas Editor con inputs anchos -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[20%] flex flex-col items-center justify-center gap-1">
+                                        <img src="./icons/circle-flags/us.svg" class="w-6 h-6 rounded-full object-cover shadow border border-slate-700">
+                                        <span class="text-[10px] font-bold text-slate-300">USD</span>
+                                    </div>
+                                    <input type="text" id="sim-usd-compra" value="977" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                    <input type="text" id="sim-usd-venta" value="997" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[20%] flex flex-col items-center justify-center gap-1">
+                                        <img src="./icons/circle-flags/eu.svg" class="w-6 h-6 rounded-full object-cover shadow border border-slate-700">
+                                        <span class="text-[10px] font-bold text-slate-300">EUR</span>
+                                    </div>
+                                    <input type="text" id="sim-eur-compra" value="1.097" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                    <input type="text" id="sim-eur-venta" value="1.120" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[20%] flex flex-col items-center justify-center gap-1">
+                                        <img src="./icons/circle-flags/ar.svg" class="w-6 h-6 rounded-full object-cover shadow border border-slate-700">
+                                        <span class="text-[10px] font-bold text-slate-300">ARS</span>
+                                    </div>
+                                    <input type="text" id="sim-ars-compra" value="0,61" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                    <input type="text" id="sim-ars-venta" value="0,65" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[20%] flex flex-col items-center justify-center gap-1">
+                                        <img src="./icons/circle-flags/br.svg" class="w-6 h-6 rounded-full object-cover shadow border border-slate-700">
+                                        <span class="text-[10px] font-bold text-slate-300">BRL</span>
+                                    </div>
+                                    <input type="text" id="sim-brl-compra" value="193" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                    <input type="text" id="sim-brl-venta" value="203" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[20%] flex flex-col items-center justify-center gap-1">
+                                        <img src="./icons/circle-flags/pe.svg" class="w-6 h-6 rounded-full object-cover shadow border border-slate-700">
+                                        <span class="text-[10px] font-bold text-slate-300">PEN</span>
+                                    </div>
+                                    <input type="text" id="sim-pen-compra" value="285" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                    <input type="text" id="sim-pen-venta" value="295" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[20%] flex flex-col items-center justify-center gap-1">
+                                        <img src="./icons/circle-flags/co.svg" class="w-6 h-6 rounded-full object-cover shadow border border-slate-700">
+                                        <span class="text-[10px] font-bold text-slate-300">COP</span>
+                                    </div>
+                                    <input type="text" id="sim-cop-compra" value="0,28" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                    <input type="text" id="sim-cop-venta" value="0,33" class="w-[40%] bg-slate-950 border border-slate-700 rounded-lg text-center text-sm font-mono text-white p-2 focus:border-blue-500 focus:outline-none transition-colors">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-5 pt-0">
+                            <button id="sim-btn-save" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-colors text-sm shadow-lg shadow-blue-500/20 flex justify-center items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                Actualizar Precios
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor Flip Card (Glow Effect Externo) -->
+                    <div id="tv-flip-wrapper" class="relative w-full max-w-xs transition-shadow duration-500 rounded-2xl shadow-[0_0_30px_rgba(555,559,528,0.4)] hover:shadow-[0_0_50px_rgba(555,559,528,0.4)] border border-white/30 cursor-pointer perspective-1000 group">
+                        
+                        <!-- Badge "Click to Flip" -->
+                        <div class="absolute -top-7 -right-3 z-50 bg-[#FF9F1C]/20 backdrop-blur-md text-[#FF9F1C] text-[9px] font-black tracking-widest px-3 py-1.5 rounded-full shadow-lg border border-[#FF9F1C]/50 animate-bounce pointer-events-none group-hover:opacity-0 transition-opacity">
+                            CLICK TO FLIP
+                        </div>
+
+                        <!-- Inner 3D Container -->
+                        <div id="tv-flip-inner" class="relative w-full h-[500px] transition-transform duration-700 preserve-3d">
+
+                            <!-- CARA FRONTAL (Destacadas) -->
+                            <div class="absolute inset-0 backface-hidden rounded-2xl overflow-hidden bg-slate-950 flex flex-col w-full bg-[url('/assets/image1.jpg')] bg-[length:500%] bg-center shadow-inner">
+                                <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-0"></div>
+                                
+                                <!-- TV Header (Logo Quadra) -->
+                                <div class="relative z-10 h-[8%] flex justify-center items-center bg-slate-900/60 border-b border-white/10 shrink-0 gap-2">
+                                    <img src="./assets/Logo Quadra Alt Titanium 2.svg" alt="Quadra Logo" class="h-4 w-4">
+                                    <span class="text-[10px] font-black tracking-widest text-slate-200">PIZARRAS QUADRA</span>
+                                </div>
+                                
+                                <!-- TV Content -->
+                                <div class="relative z-10 flex-1 flex flex-col pb-2">
+                                    <!-- Cabecera Tabla TV -->
+                                    <div class="flex w-full uppercase tracking-[0.2em] font-bold text-[9px] py-2 border-b border-white/20 text-slate-400 text-center shrink-0">
+                                        <div class="w-[25%] text-left pl-4">Divisa</div>
+                                        <div class="w-[37.5%] bg-blue-500/80 text-white rounded-t py-1">Compra</div>
+                                        <div class="w-[37.5%] py-1">Venta</div>
+                                    </div>
+                                    
+                                    <!-- Gigantes (Hero TV) -->
+                                    <div class="flex-none flex flex-col gap-2 p-2">
+                                        <div id="sim-row-usd" class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl pl-4 pr-2 py-3 transition-colors duration-500 shadow-sm">
+                                            <div class="w-[20%] flex flex-col items-start gap-1">
+                                                <img src="./icons/circle-flags/us.svg" class="w-7 h-7 rounded-full object-cover shadow-lg border border-white/20">
+                                                <span class="text-[10px] font-black tracking-widest text-white ml-px drop-shadow-md">USD</span>
+                                            </div>
+                                            <div class="w-[40%] flex justify-center text-center">
+                                                <span id="sim-tv-usd-compra" class="text-2xl font-black text-white font-mono tracking-wider w-full leading-none drop-shadow-md">977</span>
+                                            </div>
+                                            <div class="w-[40%] flex justify-center text-center">
+                                                <span id="sim-tv-usd-venta" class="text-2xl font-black text-white font-mono tracking-wider w-full leading-none drop-shadow-md">997</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="sim-row-eur" class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl pl-4 pr-2 py-3 transition-colors duration-500 shadow-sm">
+                                            <div class="w-[20%] flex flex-col items-start gap-1">
+                                                <img src="./icons/circle-flags/eu.svg" class="w-7 h-7 rounded-full object-cover shadow-lg border border-white/20">
+                                                <span class="text-[10px] font-black tracking-widest text-white ml-px drop-shadow-md">EUR</span>
+                                            </div>
+                                            <div class="w-[40%] flex justify-center text-center">
+                                                <span id="sim-tv-eur-compra" class="text-2xl font-black text-white font-mono tracking-wider w-full leading-none drop-shadow-md">1.097</span>
+                                            </div>
+                                            <div class="w-[40%] flex justify-center text-center">
+                                                <span id="sim-tv-eur-venta" class="text-2xl font-black text-white font-mono tracking-wider w-full leading-none drop-shadow-md">1.120</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border-t border-white/20 mx-2 my-1 shrink-0"></div>
+
+                                    <!-- Normales (Lista Inferior TV) -->
+                                    <div class="flex-1 flex flex-col justify-evenly mx-2 rounded-lg backdrop-blur-sm p-1">
+                                        <div id="sim-row-ars" class="flex justify-between items-center pl-3 pr-1 py-1.5 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/ar.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-200">ARS</span>
+                                            </div>
+                                            <span id="sim-tv-ars-compra" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200 rounded py-0.5">0,61</span>
+                                            <span id="sim-tv-ars-venta" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200">0,65</span>
+                                        </div>
+                                        <div id="sim-row-brl" class="flex justify-between items-center pl-3 pr-1 py-1.5 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/br.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-200">BRL</span>
+                                            </div>
+                                            <span id="sim-tv-brl-compra" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200 rounded py-0.5">193</span>
+                                            <span id="sim-tv-brl-venta" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200">203</span>
+                                        </div>
+                                        <div id="sim-row-pen" class="flex justify-between items-center pl-3 pr-1 py-1.5 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/pe.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-200">PEN</span>
+                                            </div>
+                                            <span id="sim-tv-pen-compra" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200 rounded py-0.5">285</span>
+                                            <span id="sim-tv-pen-venta" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200">295</span>
+                                        </div>
+                                        <div id="sim-row-cop" class="flex justify-between items-center pl-3 pr-1 py-1.5 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/co.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-200">COP</span>
+                                            </div>
+                                            <span id="sim-tv-cop-compra" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200 rounded py-0.5">0,28</span>
+                                            <span id="sim-tv-cop-venta" class="w-[37.5%] text-center text-xs font-bold font-mono text-slate-200">0,33</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- TV Ticker -->
+                                <div class="relative z-10 h-[5%] bg-black/80 border-t border-white/10 flex items-center shrink-0">
+                                    <span class="text-[7px] font-mono tracking-widest text-blue-400 pl-3">PIZARRA DESTACADAS QUADRA</span>
+                                </div>
+                            </div>
+
+                            <!-- CARA TRASERA (Pizarra Normal/General) -->
+                            <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl overflow-hidden bg-slate-950 flex flex-col w-full bg-[url('/assets/image1.jpg')] bg-[length:500%] bg-center shadow-inner">
+                                <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-0"></div>
+                                
+                                <!-- TV Header (Reverso - Logo Quadra) -->
+                                <div class="relative z-10 h-[8%] flex justify-center items-center bg-slate-900/80 border-b border-white/10 shrink-0 gap-2">
+                                    <img src="./assets/Logo Quadra Alt Titanium 2.svg" alt="Quadra Logo" class="h-4 w-4">
+                                    <span class="text-[10px] font-black tracking-widest text-slate-200">PIZARRAS QUADRA</span>
+                                </div>
+
+                                <div class="relative z-10 flex-1 flex flex-col pb-2">
+                                    <!-- Cabecera Tabla -->
+                                    <div class="flex w-full uppercase tracking-[0.2em] font-bold text-[9px] py-2 border-b border-white/20 text-slate-400 text-center shrink-0">
+                                        <div class="w-[25%] text-left pl-4">Divisa</div>
+                                        <div class="w-[37.5%] py-1">Compra</div>
+                                        <div class="w-[37.5%] py-1">Venta</div>
+                                    </div>
+                                    
+                                    <!-- Lista Completa Normal -->
+                                    <div class="flex-1 flex flex-col justify-evenly mx-2 mt-2 rounded-lg p-1">
+                                        <div id="sim-row-usd-back" class="flex justify-between items-center pl-3 pr-1 py-2 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/us.svg" class="w-5 h-5 rounded-full object-cover opacity-90 shadow">
+                                                <span class="text-[10px] font-bold text-white">USD</span>
+                                            </div>
+                                            <span id="sim-tv-usd-compra-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">977</span>
+                                            <span id="sim-tv-usd-venta-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">997</span>
+                                        </div>
+                                        <div id="sim-row-eur-back" class="flex justify-between items-center pl-3 pr-1 py-2 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/eu.svg" class="w-5 h-5 rounded-full object-cover opacity-90 shadow">
+                                                <span class="text-[10px] font-bold text-white">EUR</span>
+                                            </div>
+                                            <span id="sim-tv-eur-compra-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">1.097</span>
+                                            <span id="sim-tv-eur-venta-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">1.120</span>
+                                        </div>
+                                        <div id="sim-row-ars-back" class="flex justify-between items-center pl-3 pr-1 py-2 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/ar.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-300">ARS</span>
+                                            </div>
+                                            <span id="sim-tv-ars-compra-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">0,61</span>
+                                            <span id="sim-tv-ars-venta-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">0,65</span>
+                                        </div>
+                                        <div id="sim-row-brl-back" class="flex justify-between items-center pl-3 pr-1 py-2 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/br.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-300">BRL</span>
+                                            </div>
+                                            <span id="sim-tv-brl-compra-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">193</span>
+                                            <span id="sim-tv-brl-venta-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">203</span>
+                                        </div>
+                                        <div id="sim-row-pen-back" class="flex justify-between items-center pl-3 pr-1 py-2 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/pe.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-300">PEN</span>
+                                            </div>
+                                            <span id="sim-tv-pen-compra-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">285</span>
+                                            <span id="sim-tv-pen-venta-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">295</span>
+                                        </div>
+                                        <div id="sim-row-cop-back" class="flex justify-between items-center pl-3 pr-1 py-2 transition-colors duration-500 rounded">
+                                            <div class="w-[25%] flex items-center gap-3">
+                                                <img src="./icons/circle-flags/co.svg" class="w-5 h-5 rounded-full object-cover opacity-80 shadow">
+                                                <span class="text-[10px] font-bold text-slate-300">COP</span>
+                                            </div>
+                                            <span id="sim-tv-cop-compra-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">0,28</span>
+                                            <span id="sim-tv-cop-venta-back" class="w-[37.5%] text-center text-sm font-bold font-mono text-white">0,33</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative z-10 h-[5%] bg-black/80 border-t border-white/10 flex items-center shrink-0">
+                                    <span class="text-[7px] font-mono tracking-widest text-emerald-500 pl-3">PIZARRA GENERAL QUADRA</span>
+                                </div>
+                            </div>
+                        </div> <!-- End Inner 3D Container -->
+                    </div> <!-- Cierre del Contenedor Base TV -->
+                </div>
+            </div>
+
+            <!-- CTA de Producto -->
+            <div class="mt-4 text-center reveal">
+                <a href="https://wa.me/+56961659015?text=Hola,%20me%20interesa%20implementar%20las%20Pizarras%20Digitales%20Quadra%20en%20mi%20Casa%20de%20Cambio." target="_blank" class="inline-flex items-center justify-center gap-3 bg-[#FF9F1C] text-white px-10 py-4 rounded-xl font-black hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,159,28,0.4)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24"><path fill="currentColor" d="M12.001 2c5.523 0 10 4.477 10 10s-4.477 10-10 10a9.95 9.95 0 0 1-5.03-1.355L2.005 22l1.352-4.968A9.95 9.95 0 0 1 2.001 12c0-5.523 4.477-10 10-10M8.593 7.3l-.2.008a1 1 0 0 0-.372.1a1.3 1.3 0 0 0-.294.228c-.12.113-.188.211-.261.306A2.73 2.73 0 0 0 6.9 9.62c.002.49.13.967.33 1.413c.409.902 1.082 1.857 1.97 2.742c.214.213.424.427.65.626a9.45 9.45 0 0 0 3.84 2.046l.568.087c.185.01.37-.004.556-.013a2 2 0 0 0 .833-.231a5 5 0 0 0 .383-.22q.001.002.125-.09c.135-.1.218-.171.33-.288q.126-.13.21-.302c.078-.163.156-.474.188-.733c.024-.198.017-.306.014-.373c-.004-.107-.093-.218-.19-.265l-.582-.261s-.87-.379-1.402-.621a.5.5 0 0 0-.176-.041a.48.48 0 0 0-.378.127c-.005-.002-.072.055-.795.931a.35.35 0 0 1-.368.13a1.4 1.4 0 0 1-.191-.066c-.124-.052-.167-.072-.252-.108a6 6 0 0 1-1.575-1.003c-.126-.11-.243-.23-.363-.346a6.3 6.3 0 0 1-1.02-1.268l-.059-.095a1 1 0 0 1-.102-.205c-.038-.147.061-.265.061-.265s.243-.266.356-.41c.11-.14.203-.276.263-.373c.118-.19.155-.385.093-.536q-.42-1.026-.868-2.041c-.059-.134-.234-.23-.393-.249q-.081-.01-.162-.016a3 3 0 0 0-.403.004z"/></svg>
+                    Cotizar Pizarras Quadra
+                </a>
+                <p class="mt-4 text-xs font-mono text-slate-200 uppercase tracking-widest">Incluye capacitación y soporte B2B</p>
+            </div>
+
+            <!-- Beneficios -->
+            <div class="grid md:grid-cols-3 gap-6 items-start reveal">
+                <div class="glass-card glow-card p-6 rounded-2xl flex flex-col gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">Sincronización Instantánea</h4>
+                        <p class="text-sm text-slate-200 leading-relaxed">Lo que guardas en el panel central aparece al instante en todos tus Smart TVs de sucursal. Cero recargas de página, cero esperas.</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card glow-card p-6 rounded-2xl flex flex-col gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">Gestor Drag & Drop</h4>
+                        <p class="text-sm text-slate-200 leading-relaxed">Panel administrativo intuitivo. Arrastra las divisas para cambiar su orden o decide cuáles monedas destacar en tamaño gigante en tu vitrina exterior.</p>
+                    </div>
+                </div>
+
+                <div class="glass-card glow-card p-6 rounded-2xl flex flex-col gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 text-purple-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">Look & Feel Premium</h4>
+                        <p class="text-sm text-slate-200 leading-relaxed">Diseño Glassmorphism adaptable. Sube tu logo, ajusta tus colores corporativos o configura fondos inmersivos a pantalla completa.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Franja de Credibilidad Técnica -->
+    <div class="border-y border-slate-300/30 bg-slate-900/40 py-6">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left reveal">
+            <div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <p class="text-sm md:text-base text-slate-200 font-medium max-w-3xl">
+                <strong class="text-slate-200">Arquitectura de software de grado financiero.</strong> Diseñada para operar ininterrumpidamente, soportando alta concurrencia y garantizando precisión exacta en cada sucursal.
+            </p>
+        </div>
+    </div>
+
+    <!-- Áreas de Experiencia -->
+    <section id="experiencia" class="py-24 px-6 md:px-12">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-black text-center mb-16 reveal">Otras Soluciones Tecnológicas</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 reveal">
+                <div class="glass-card glow-card p-8 rounded-3xl">
+                    <div class="w-14 h-14 rounded-2xl bg-[#FFC16A]/20 border border-[#FF9F1C]/40 flex items-center justify-center mb-6 text-[#FFC16A]">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Aplicaciones B2B & Dashboards</h3>
+                    <p class="text-slate-200 text-sm leading-relaxed mb-6">
+                        Construcción de interfaces administrativas complejas, plataformas SaaS y herramientas internas. Interfaces fluidas diseñadas para que los equipos trabajen más rápido y sin errores.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-[#FFC16A] bg-[#FFC16A]/20 px-3 py-1.5 rounded-full border border-[#FF9F1C]/40">Vanilla JS</span>
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-[#FFC16A] bg-[#FFC16A]/20 px-3 py-1.5 rounded-full border border-[#FF9F1C]/40">Tailwind CSS</span>
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-[#FFC16A] bg-[#FFC16A]/20 px-3 py-1.5 rounded-full border border-[#FF9F1C]/40">PHP / SQL</span>
+                    </div>
+                </div>
+
+                <div class="glass-card glow-card p-8 rounded-3xl">
+                    <div class="w-14 h-14 rounded-2xl bg-[#FFC16A]/20 border border-[#FF9F1C]/40 flex items-center justify-center mb-6 text-[#FFC16A]">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Automatización & IA</h3>
+                    <p class="text-slate-200 text-sm leading-relaxed mb-6">
+                        Integración de APIs de Inteligencia Artificial (Gemini, LLMs locales) y flujos de trabajo con n8n para eliminar tareas repetitivas, generar reportes automáticos y manejar flujos de redes sociales.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-[#FFC16A] bg-[#FFC16A]/20 px-3 py-1.5 rounded-full border border-[#FF9F1C]/40">n8n Workflows</span>
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-[#FFC16A] bg-[#FFC16A]/20 px-3 py-1.5 rounded-full border border-[#FF9F1C]/40">Gemini API</span>
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-[#FFC16A] bg-[#FFC16A]/20 px-3 py-1.5 rounded-full border border-[#FF9F1C]/40">Firebase</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer / Contacto -->
+    <footer id="contact" class="bg-slate-900/20 border-t border-slate-300/40 pt-20 pb-10 px-6">
+        <div class="max-w-4xl mx-auto text-center reveal">
+            <h2 class="text-3xl font-black text-white mb-6">¿Listo para modernizar tu negocio?</h2>
+            <p class="text-slate-200 mb-8">Escríbeme para agendar una demostración gratuita de las Pizarras o para evaluar la viabilidad técnica de tu próxima idea.</p>
+            
+            <a href="https://wa.me/+56961659015" class="inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-xl font-black hover:bg-slate-200/90 transition shadow-[0_0_20px_rgba(255,255,255,0.3)] mb-16">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-500" viewBox="0 0 24 24"><path fill="currentColor" d="M12.001 2c5.523 0 10 4.477 10 10s-4.477 10-10 10a9.95 9.95 0 0 1-5.03-1.355L2.005 22l1.352-4.968A9.95 9.95 0 0 1 2.001 12c0-5.523 4.477-10 10-10M8.593 7.3l-.2.008a1 1 0 0 0-.372.1a1.3 1.3 0 0 0-.294.228c-.12.113-.188.211-.261.306A2.73 2.73 0 0 0 6.9 9.62c.002.49.13.967.33 1.413c.409.902 1.082 1.857 1.97 2.742c.214.213.424.427.65.626a9.45 9.45 0 0 0 3.84 2.046l.568.087c.185.01.37-.004.556-.013a2 2 0 0 0 .833-.231a5 5 0 0 0 .383-.22q.001.002.125-.09c.135-.1.218-.171.33-.288q.126-.13.21-.302c.078-.163.156-.474.188-.733c.024-.198.017-.306.014-.373c-.004-.107-.093-.218-.19-.265l-.582-.261s-.87-.379-1.402-.621a.5.5 0 0 0-.176-.041a.48.48 0 0 0-.378.127c-.005-.002-.072.055-.795.931a.35.35 0 0 1-.368.13a1.4 1.4 0 0 1-.191-.066c-.124-.052-.167-.072-.252-.108a6 6 0 0 1-1.575-1.003c-.126-.11-.243-.23-.363-.346a6.3 6.3 0 0 1-1.02-1.268l-.059-.095a1 1 0 0 1-.102-.205c-.038-.147.061-.265.061-.265s.243-.266.356-.41c.11-.14.203-.276.263-.373c.118-.19.155-.385.093-.536q-.42-1.026-.868-2.041c-.059-.134-.234-.23-.393-.249q-.081-.01-.162-.016a3 3 0 0 0-.403.004z"/></svg>
+                Contactar por WhatsApp
+            </a>
+
+            <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-slate-300/40 gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                        <span class="font-black text-white text-[10px] tracking-tighter">MM</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-300 tracking-wider">MIGUEL MUÑOZ</span>
+                </div>
+                <p class="text-[10px] text-slate-300 font-mono uppercase tracking-widest">© 2026. Santiago de Chile.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./scripts/index.js"></script>
+    <!-- Módulos de Animación y Simulador -->
+    <script type="module" src="./scripts/glow-cursor.js"></script>
+    <script type="module" src="./scripts/simulador.js"></script>
+    <script src="./scripts/flip-card.js"></script>
+    <!-- Motor Grainient de Alta Fidelidad -->
+    <script src="./scripts/grainient-bg.js"></script>
+</body>
+</html>
