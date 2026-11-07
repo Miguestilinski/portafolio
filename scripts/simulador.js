@@ -20,83 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (!simBtnSave) return;
-
-    // --- MÁQUINA DE ESTADOS DEL TUTORIAL --- //
-    const tutorialBox = document.getElementById('sim-tutorial');
-    const tutorialText = document.getElementById('sim-tut-text');
-    const editorPanel = document.querySelector('#sim-container > div:nth-child(3)'); // El Editor
-    const tvPanel = document.querySelector('#sim-container > div:nth-child(4)'); // La TV
-    const container = document.getElementById('sim-container');
-
-    let tutorialFase = 0; // 0: Remolino Editor, 1: Descenso al Botón, 2: Disparo a TV
-
-    // Bucle para controlar a GlowCursor mientras el tutorial esté activo
-    const ghostLoop = () => {
-        // Abortar lógica en móviles para no consumir recursos
-        if (window.innerWidth < 1024) {
-            if (tutorialBox) tutorialBox.remove();
-            return;
-        }
-
-        if (tutorialFase < 2 && window.GlowCursorAPI) {
-            let tX = 0, tY = 0;
-            const containerRect = container.getBoundingClientRect();
-            
-            if (tutorialFase === 0 && editorPanel) {
-                const rect = editorPanel.getBoundingClientRect();
-                // Remolino
-                tX = (rect.left - containerRect.left) + rect.width / 2 + Math.sin(Date.now() / 400) * 80;
-                tY = (rect.top - containerRect.top) + rect.height / 3 + Math.cos(Date.now() / 400) * 80;
-                
-                if (tutorialBox) {
-                    tutorialBox.style.top = `${rect.top - containerRect.top + rect.height / 4}px`;
-                    tutorialBox.style.left = `${rect.left - containerRect.left - 20}px`;
-                }
-            } else if (tutorialFase === 1) {
-                const btnRect = simBtnSave.getBoundingClientRect();
-                tX = (btnRect.left - containerRect.left) + btnRect.width / 2;
-                tY = (btnRect.top - containerRect.top) + btnRect.height / 2;
-            }
-            
-            window.GlowCursorAPI.setPointer(tX, tY);
-        }
-        if (tutorialFase < 2) requestAnimationFrame(ghostLoop);
-    };
-
-    // Darle 500ms al motor de WebGL para iniciar
-    setTimeout(ghostLoop, 500);
-
-    const avanzarTutorialABoton = () => {
-        if (tutorialFase === 0) {
-            tutorialFase = 1;
-            if(tutorialText) tutorialText.style.opacity = '0';
-            
-            setTimeout(() => {
-                if(tutorialText) {
-                    tutorialText.textContent = "AHORA ACTUALIZA LOS PRECIOS";
-                    tutorialText.classList.add('text-emerald-400');
-                }
-                
-                if (tutorialBox) {
-                    const btnRect = simBtnSave.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
-                    const isMobile = window.innerWidth < 1024;
-                    
-                    tutorialBox.style.top = `${btnRect.top - containerRect.top - 30}px`;
-                    tutorialBox.style.left = isMobile ? `${btnRect.left - containerRect.left + btnRect.width / 2}px` : `${btnRect.left - containerRect.left - 50}px`;
-                }
-                
-                if(tutorialText) tutorialText.style.opacity = '1';
-            }, 400); 
-        }
-    };
-
-    inputs.forEach(input => {
-        input.addEventListener('focus', avanzarTutorialABoton);
-        input.addEventListener('input', avanzarTutorialABoton);
-    });
     
-    // --- LÓGICA DE ACTUALIZACIÓN Y DISPARO A LA TV --- //
+    // --- LÓGICA DE ACTUALIZACIÓN --- //
     simBtnSave.addEventListener('click', () => {
         const values = {
             usd: { c: document.getElementById('sim-usd-compra').value, v: document.getElementById('sim-usd-venta').value },
@@ -130,33 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         simBtnSave.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Actualizando...`;
         simBtnSave.disabled = true;
-
-        // Fase 2: Latigazo Final hacia la TV
-        if (tutorialFase === 1) {
-            tutorialFase = 2; 
-            if(tutorialText) tutorialText.style.opacity = '0'; 
-            
-            const tvRect = tvPanel.getBoundingClientRect();
-            const containerRect = document.getElementById('sim-container').getBoundingClientRect();
-            
-            const tX = (tvRect.left - containerRect.left) + tvRect.width / 2;
-            const tY = (tvRect.top - containerRect.top) + tvRect.height / 2;
-            
-            if(window.GlowCursorAPI) {
-                // Latigazo
-                window.GlowCursorAPI.setPointer(tX, tY, true);
-                
-                // Explosión al llegar
-                setTimeout(() => {
-                    window.GlowCursorAPI.burst(tX, tY);
-                    window.GlowCursorAPI.release(); // Devolvemos el control al mouse
-                }, 300);
-            }
-            
-            setTimeout(() => {
-                if(tutorialBox) tutorialBox.remove(); 
-            }, 400); 
-        }
 
         // Latencia Simulada 0ms (Actualización UI)
         setTimeout(() => {
